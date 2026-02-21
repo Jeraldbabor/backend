@@ -12,14 +12,18 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * Creates a default admin user for initial access.
+     * Change these credentials before deploying to production!
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Create default admin user
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name'     => 'Admin',
+            'email'    => 'admin@campuseye.com',
+            'password' => 'Rald@23', // Auto-hashed by the model's 'hashed' cast
+            'role'     => 'admin',
         ]);
     }
 }
