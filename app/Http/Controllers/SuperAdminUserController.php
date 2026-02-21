@@ -6,19 +6,20 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-class UserController extends Controller
+class SuperAdminUserController extends Controller
 {
     /**
-     * Display a listing of the users.
-     * GET /api/admin/users
+     * Display a listing of the users across all universities.
+     * GET /api/superadmin/users
      */
     public function index(Request $request)
     {
         $query = User::with('university');
 
-        // Scope to admin's university
-        $query->where('university_id', auth()->user()->university_id)
-              ->where('role', '!=', 'superadmin');
+        // Optional: filter by university_id
+        if ($request->has('university_id')) {
+            $query->where('university_id', $request->university_id);
+        }
 
         // Optional: filter by role
         if ($request->has('role')) {
@@ -42,22 +43,18 @@ class UserController extends Controller
 
     /**
      * Store a newly created user in storage.
-     * POST /api/admin/users
+     * POST /api/superadmin/users
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
+            // Exclude superadmin since another user requested it
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
             'role'     => ['required', Rule::in(['superadmin', 'admin', 'parent', 'student'])],
             'university_id' => 'nullable|exists:universities,id',
         ]);
-
-        if ($validated['role'] === 'superadmin') {
-            return response()->json(['message' => 'Unauthorized to assign superadmin role.'], 403);
-        }
-        $validated['university_id'] = auth()->user()->university_id;
 
         $user = User::create([
             'name'     => $validated['name'],
@@ -75,14 +72,10 @@ class UserController extends Controller
 
     /**
      * Display the specified user.
-     * GET /api/admin/users/{id}
+     * GET /api/superadmin/users/{id}
      */
     public function show(User $user)
     {
-        if ($user->university_id !== auth()->user()->university_id) {
-            return response()->json(['message' => 'Unauthorized access to user from another university.'], 403);
-        }
-
         return response()->json([
             'user' => $user->load('university'),
         ]);
@@ -90,14 +83,10 @@ class UserController extends Controller
 
     /**
      * Update the specified user in storage.
-     * PUT /api/admin/users/{id}
+     * PUT /api/superadmin/users/{id}
      */
     public function update(Request $request, User $user)
     {
-        if ($user->university_id !== auth()->user()->university_id) {
-            return response()->json(['message' => 'Unauthorized access to update user from another university.'], 403);
-        }
-
         $validated = $request->validate([
             'name'     => 'sometimes|required|string|max:255',
             'email'    => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
@@ -106,19 +95,18 @@ class UserController extends Controller
             'university_id' => 'sometimes|nullable|exists:universities,id',
         ]);
 
-        if (isset($validated['role']) && $validated['role'] === 'superadmin') {
-            return response()->json(['message' => 'Unauthorized to assign superadmin role.'], 403);
-        }
-
         // If password is provided, update it
         if (!empty($validated['password'])) {
-            $user->password = $validated['password']; // Auto-hashed via model cast
+            $user->password = $validated['password'];
         }
 
         // Update other fields if present
         if (isset($validated['name']))   $user->name  = $validated['name'];
         if (isset($validated['email']))  $user->email = $validated['email'];
         if (isset($validated['role']))   $user->role  = $validated['role'];
+        if (array_key_exists('university_id', $validated)) {
+            $user->university_id = $validated['university_id'];
+        }
 
         $user->save();
 
@@ -130,15 +118,11 @@ class UserController extends Controller
 
     /**
      * Remove the specified user from storage.
-     * DELETE /api/admin/users/{id}
+     * DELETE /api/superadmin/users/{id}
      */
     public function destroy(User $user)
     {
-        if ($user->university_id !== auth()->user()->university_id) {
-            return response()->json(['message' => 'Unauthorized to delete user from another university.'], 403);
-        }
-
-        // Prevent deleting the currently authenticated admin
+        // Prevent deleting the currently authenticated superadmin
         if (auth()->id() === $user->id) {
             return response()->json([
                 'message' => 'You cannot delete yourself from this endpoint. Use the account settings instead.',

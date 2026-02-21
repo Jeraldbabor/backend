@@ -28,7 +28,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role', // Added: user role (admin, parent, student)
+        'role', // Added: user role (superadmin, admin, parent, student)
+        'university_id',
     ];
 
     /**
@@ -62,5 +63,23 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    /**
+     * Check if the user has the 'superadmin' role.
+     *
+     * @return bool
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'superadmin';
+    }
+
+    /**
+     * Get the user's university.
+     */
+    public function university()
+    {
+        return $this->belongsTo(University::class);
     }
 }
