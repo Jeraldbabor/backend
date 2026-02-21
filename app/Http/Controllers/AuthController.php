@@ -42,8 +42,8 @@ class AuthController extends Controller
             ]);
         }
 
-        // Step 4: Ensure the user has admin role
-        if (! $user->isAdmin()) {
+        // Step 4: Ensure the user has admin or superadmin role
+        if (! $user->isAdmin() && ! $user->isSuperAdmin()) {
             throw ValidationException::withMessages([
                 'email' => ['Access denied. Admin privileges required.'],
             ]);
@@ -86,9 +86,11 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        // Return the currently authenticated user's data
+        // Return the currently authenticated user's data with university
+        $user = $request->user()->load('university');
+        
         return response()->json([
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 

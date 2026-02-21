@@ -25,5 +25,9 @@ class DatabaseSeeder extends Seeder
             'password' => 'Rald@23', // Auto-hashed by the model's 'hashed' cast
             'role'     => 'admin',
         ]);
+
+        $this->call([
+            SuperAdminSeeder::class,
+        ]);
     }
 }
