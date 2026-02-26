@@ -12,7 +12,11 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000')],
+    'allowed_origins' => [
+        '*', // Allow anything in local network dev
+        env('FRONTEND_URL', 'http://localhost:3000'),
+        'http://localhost:8081', // Expo Web App
+    ],
 
     'allowed_origins_patterns' => [],
 

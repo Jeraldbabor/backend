@@ -28,7 +28,7 @@ class AuthController extends Controller
     {
         // Step 1: Validate incoming request data
         $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required|string|min:6',
         ]);
 
@@ -55,8 +55,8 @@ class AuthController extends Controller
         // Step 6: Return the user data and token
         return response()->json([
             'message' => 'Login successful.',
-            'user'    => $user,
-            'token'   => $token,
+            'user' => $user,
+            'token' => $token,
         ]);
     }
 
@@ -86,9 +86,9 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        // Return the currently authenticated user's data with university
-        $user = $request->user()->load('university');
-        
+        // Return the currently authenticated user's data with school
+        $user = $request->user()->load('school');
+
         return response()->json([
             'user' => $user,
         ]);
@@ -106,7 +106,7 @@ class AuthController extends Controller
         // Step 1: Validate the request data
         $request->validate([
             'current_password' => 'required|string',
-            'password'         => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         $user = $request->user();

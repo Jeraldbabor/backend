@@ -20,10 +20,10 @@ class DatabaseSeeder extends Seeder
     {
         // Create default admin user
         User::factory()->create([
-            'name'     => 'Admin',
-            'email'    => 'admin@campuseye.com',
+            'name' => 'Admin',
+            'email' => 'admin@campuseye.com',
             'password' => 'Rald@23', // Auto-hashed by the model's 'hashed' cast
-            'role'     => 'admin',
+            'role' => 'admin',
         ]);
 
         $this->call([

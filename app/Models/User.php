@@ -17,7 +17,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -29,7 +29,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role', // Added: user role (superadmin, admin, parent, student)
-        'university_id',
+        'school_id',
     ];
 
     /**
@@ -57,8 +57,6 @@ class User extends Authenticatable
 
     /**
      * Check if the user has the 'admin' role.
-     *
-     * @return bool
      */
     public function isAdmin(): bool
     {
@@ -67,8 +65,6 @@ class User extends Authenticatable
 
     /**
      * Check if the user has the 'superadmin' role.
-     *
-     * @return bool
      */
     public function isSuperAdmin(): bool
     {
@@ -76,10 +72,58 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the user's university.
+     * Check if the user has the 'teacher' role.
      */
-    public function university()
+    public function isTeacher(): bool
     {
-        return $this->belongsTo(University::class);
+        return $this->role === 'teacher';
+    }
+
+    /**
+     * Check if the user has the 'principal' role.
+     */
+    public function isPrincipal(): bool
+    {
+        return $this->role === 'principal';
+    }
+
+    /**
+     * Check if the user has the 'parent' role.
+     */
+    public function isParent(): bool
+    {
+        return $this->role === 'parent';
+    }
+
+    /**
+     * Get the user's school.
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class);
+    }
+
+    /**
+     * Get students linked to this parent user.
+     */
+    public function students()
+    {
+        return $this->hasMany(Student::class, 'parent_id');
+    }
+
+    /**
+     * Get teacher assignments for this user.
+     */
+    public function teacherAssignments()
+    {
+        return $this->hasMany(Teacher::class);
+    }
+
+    /**
+     * Get notifications for this user.
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
     }
 }

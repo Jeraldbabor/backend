@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Kiosk (Gate Scanner Device)
+    |--------------------------------------------------------------------------
+    |
+    | API key used to authenticate kiosk devices at the school gate.
+    | Set KIOSK_API_KEY in .env to a strong random string.
+    |
+    */
+    'kiosk' => [
+        'api_key' => env('KIOSK_API_KEY'),
+    ],
+
 ];

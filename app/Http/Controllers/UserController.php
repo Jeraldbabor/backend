@@ -14,11 +14,11 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with('university');
+        $query = User::with('school');
 
-        // Scope to admin's university
-        $query->where('university_id', auth()->user()->university_id)
-              ->where('role', '!=', 'superadmin');
+        // Scope to admin's school
+        $query->where('school_id', auth()->user()->school_id)
+            ->where('role', '!=', 'superadmin');
 
         // Optional: filter by role
         if ($request->has('role')) {
@@ -30,7 +30,7 @@ class UserController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%");
+                    ->orWhere('email', 'ilike', "%{$search}%");
             });
         }
 
@@ -47,29 +47,29 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
-            'role'     => ['required', Rule::in(['superadmin', 'admin', 'parent', 'student'])],
-            'university_id' => 'nullable|exists:universities,id',
+            'role' => ['required', Rule::in(['superadmin', 'admin', 'parent', 'teacher', 'principal', 'student'])],
+            'school_id' => 'nullable|exists:schools,id',
         ]);
 
         if ($validated['role'] === 'superadmin') {
             return response()->json(['message' => 'Unauthorized to assign superadmin role.'], 403);
         }
-        $validated['university_id'] = auth()->user()->university_id;
+        $validated['school_id'] = auth()->user()->school_id;
 
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
+            'name' => $validated['name'],
+            'email' => $validated['email'],
             'password' => $validated['password'], // Auto-hashed via model cast
-            'role'     => $validated['role'],
-            'university_id' => $validated['university_id'] ?? null,
+            'role' => $validated['role'],
+            'school_id' => $validated['school_id'] ?? null,
         ]);
 
         return response()->json([
             'message' => 'User created successfully',
-            'user'    => $user,
+            'user' => $user,
         ], 201);
     }
 
@@ -79,12 +79,12 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        if ($user->university_id !== auth()->user()->university_id) {
-            return response()->json(['message' => 'Unauthorized access to user from another university.'], 403);
+        if ($user->school_id !== auth()->user()->school_id) {
+            return response()->json(['message' => 'Unauthorized access to user from another school.'], 403);
         }
 
         return response()->json([
-            'user' => $user->load('university'),
+            'user' => $user->load('school'),
         ]);
     }
 
@@ -94,16 +94,16 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        if ($user->university_id !== auth()->user()->university_id) {
-            return response()->json(['message' => 'Unauthorized access to update user from another university.'], 403);
+        if ($user->school_id !== auth()->user()->school_id) {
+            return response()->json(['message' => 'Unauthorized access to update user from another school.'], 403);
         }
 
         $validated = $request->validate([
-            'name'     => 'sometimes|required|string|max:255',
-            'email'    => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'name' => 'sometimes|required|string|max:255',
+            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:6', // Optional when updating
-            'role'     => ['sometimes', 'required', Rule::in(['superadmin', 'admin', 'parent', 'student'])],
-            'university_id' => 'sometimes|nullable|exists:universities,id',
+            'role' => ['sometimes', 'required', Rule::in(['superadmin', 'admin', 'parent', 'teacher', 'principal', 'student'])],
+            'school_id' => 'sometimes|nullable|exists:schools,id',
         ]);
 
         if (isset($validated['role']) && $validated['role'] === 'superadmin') {
@@ -111,20 +111,26 @@ class UserController extends Controller
         }
 
         // If password is provided, update it
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = $validated['password']; // Auto-hashed via model cast
         }
 
         // Update other fields if present
-        if (isset($validated['name']))   $user->name  = $validated['name'];
-        if (isset($validated['email']))  $user->email = $validated['email'];
-        if (isset($validated['role']))   $user->role  = $validated['role'];
+        if (isset($validated['name'])) {
+            $user->name = $validated['name'];
+        }
+        if (isset($validated['email'])) {
+            $user->email = $validated['email'];
+        }
+        if (isset($validated['role'])) {
+            $user->role = $validated['role'];
+        }
 
         $user->save();
 
         return response()->json([
             'message' => 'User updated successfully',
-            'user'    => $user,
+            'user' => $user,
         ]);
     }
 
@@ -134,8 +140,8 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        if ($user->university_id !== auth()->user()->university_id) {
-            return response()->json(['message' => 'Unauthorized to delete user from another university.'], 403);
+        if ($user->school_id !== auth()->user()->school_id) {
+            return response()->json(['message' => 'Unauthorized to delete user from another school.'], 403);
         }
 
         // Prevent deleting the currently authenticated admin

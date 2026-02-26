@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class UniversityController extends Controller
+class SchoolController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -15,8 +15,9 @@ class UniversityController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $universities = \App\Models\University::orderBy('name')->get();
-        return response()->json($universities);
+        $schools = \App\Models\School::orderBy('name')->get();
+
+        return response()->json($schools);
     }
 
     /**
@@ -29,14 +30,14 @@ class UniversityController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:universities,name',
+            'name' => 'required|string|max:255|unique:schools,name',
         ]);
 
-        $university = \App\Models\University::create($validated);
+        $school = \App\Models\School::create($validated);
 
         return response()->json([
-            'message' => 'University created successfully',
-            'university' => $university,
+            'message' => 'School created successfully',
+            'school' => $school,
         ], 201);
     }
 
@@ -49,9 +50,10 @@ class UniversityController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $university = \App\Models\University::findOrFail($id);
+        $school = \App\Models\School::findOrFail($id);
+
         return response()->json([
-            'university' => $university,
+            'school' => $school,
         ]);
     }
 
@@ -64,17 +66,17 @@ class UniversityController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $university = \App\Models\University::findOrFail($id);
+        $school = \App\Models\School::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:universities,name,' . $university->id,
+            'name' => 'required|string|max:255|unique:schools,name,'.$school->id,
         ]);
 
-        $university->update($validated);
+        $school->update($validated);
 
         return response()->json([
-            'message' => 'University updated successfully',
-            'university' => $university,
+            'message' => 'School updated successfully',
+            'school' => $school,
         ]);
     }
 
@@ -87,11 +89,11 @@ class UniversityController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $university = \App\Models\University::findOrFail($id);
-        $university->delete();
+        $school = \App\Models\School::findOrFail($id);
+        $school->delete();
 
         return response()->json([
-            'message' => 'University deleted successfully',
+            'message' => 'School deleted successfully',
         ]);
     }
 }

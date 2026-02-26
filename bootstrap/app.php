@@ -14,6 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Using token-based auth (Bearer tokens), not cookie-based SPA auth
         // so statefulApi() is not needed
+
+        // Register custom middleware aliases
+        $middleware->alias([
+            'role' => \App\Http\Middleware\EnsureRole::class,
+            'kiosk' => \App\Http\Middleware\KioskApiKey::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
