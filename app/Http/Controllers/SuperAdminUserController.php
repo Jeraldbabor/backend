@@ -9,16 +9,16 @@ use Illuminate\Validation\Rule;
 class SuperAdminUserController extends Controller
 {
     /**
-     * Display a listing of the users across all universities.
+     * Display a listing of the users across all schools.
      * GET /api/superadmin/users
      */
     public function index(Request $request)
     {
-        $query = User::with('university');
+        $query = User::with('school');
 
-        // Optional: filter by university_id
-        if ($request->has('university_id')) {
-            $query->where('university_id', $request->university_id);
+        // Optional: filter by school_id
+        if ($request->has('school_id')) {
+            $query->where('school_id', $request->school_id);
         }
 
         // Optional: filter by role
@@ -31,7 +31,7 @@ class SuperAdminUserController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%");
+                    ->orWhere('email', 'ilike', "%{$search}%");
             });
         }
 
@@ -49,24 +49,24 @@ class SuperAdminUserController extends Controller
     {
         $validated = $request->validate([
             // Exclude superadmin since another user requested it
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
-            'role'     => ['required', Rule::in(['superadmin', 'admin', 'parent', 'student'])],
-            'university_id' => 'nullable|exists:universities,id',
+            'role' => ['required', Rule::in(['superadmin', 'admin', 'parent', 'teacher', 'principal', 'student'])],
+            'school_id' => 'nullable|exists:schools,id',
         ]);
 
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
+            'name' => $validated['name'],
+            'email' => $validated['email'],
             'password' => $validated['password'], // Auto-hashed via model cast
-            'role'     => $validated['role'],
-            'university_id' => $validated['university_id'] ?? null,
+            'role' => $validated['role'],
+            'school_id' => $validated['school_id'] ?? null,
         ]);
 
         return response()->json([
             'message' => 'User created successfully',
-            'user'    => $user,
+            'user' => $user,
         ], 201);
     }
 
@@ -77,7 +77,7 @@ class SuperAdminUserController extends Controller
     public function show(User $user)
     {
         return response()->json([
-            'user' => $user->load('university'),
+            'user' => $user->load('school'),
         ]);
     }
 
@@ -88,31 +88,37 @@ class SuperAdminUserController extends Controller
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
-            'name'     => 'sometimes|required|string|max:255',
-            'email'    => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'name' => 'sometimes|required|string|max:255',
+            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:6', // Optional when updating
-            'role'     => ['sometimes', 'required', Rule::in(['superadmin', 'admin', 'parent', 'student'])],
-            'university_id' => 'sometimes|nullable|exists:universities,id',
+            'role' => ['sometimes', 'required', Rule::in(['superadmin', 'admin', 'parent', 'teacher', 'principal', 'student'])],
+            'school_id' => 'sometimes|nullable|exists:schools,id',
         ]);
 
         // If password is provided, update it
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = $validated['password'];
         }
 
         // Update other fields if present
-        if (isset($validated['name']))   $user->name  = $validated['name'];
-        if (isset($validated['email']))  $user->email = $validated['email'];
-        if (isset($validated['role']))   $user->role  = $validated['role'];
-        if (array_key_exists('university_id', $validated)) {
-            $user->university_id = $validated['university_id'];
+        if (isset($validated['name'])) {
+            $user->name = $validated['name'];
+        }
+        if (isset($validated['email'])) {
+            $user->email = $validated['email'];
+        }
+        if (isset($validated['role'])) {
+            $user->role = $validated['role'];
+        }
+        if (array_key_exists('school_id', $validated)) {
+            $user->school_id = $validated['school_id'];
         }
 
         $user->save();
 
         return response()->json([
             'message' => 'User updated successfully',
-            'user'    => $user,
+            'user' => $user,
         ]);
     }
 
