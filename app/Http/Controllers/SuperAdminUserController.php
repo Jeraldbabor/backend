@@ -54,7 +54,13 @@ class SuperAdminUserController extends Controller
             'password' => 'required|string|min:6',
             'role' => ['required', Rule::in(['superadmin', 'admin', 'parent', 'teacher', 'principal', 'student'])],
             'school_id' => 'nullable|exists:schools,id',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
+
+        $profileImagePath = null;
+        if ($request->hasFile('profile_image')) {
+            $profileImagePath = $request->file('profile_image')->store('profiles', 'public');
+        }
 
         $user = User::create([
             'name' => $validated['name'],
@@ -62,6 +68,7 @@ class SuperAdminUserController extends Controller
             'password' => $validated['password'], // Auto-hashed via model cast
             'role' => $validated['role'],
             'school_id' => $validated['school_id'] ?? null,
+            'profile_image' => $profileImagePath,
         ]);
 
         return response()->json([
@@ -93,6 +100,7 @@ class SuperAdminUserController extends Controller
             'password' => 'nullable|string|min:6', // Optional when updating
             'role' => ['sometimes', 'required', Rule::in(['superadmin', 'admin', 'parent', 'teacher', 'principal', 'student'])],
             'school_id' => 'sometimes|nullable|exists:schools,id',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         // If password is provided, update it
@@ -112,6 +120,13 @@ class SuperAdminUserController extends Controller
         }
         if (array_key_exists('school_id', $validated)) {
             $user->school_id = $validated['school_id'];
+        }
+
+        if ($request->hasFile('profile_image')) {
+            if ($user->profile_image) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profile_image);
+            }
+            $user->profile_image = $request->file('profile_image')->store('profiles', 'public');
         }
 
         $user->save();

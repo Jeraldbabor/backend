@@ -76,6 +76,7 @@ class StudentController extends Controller
             'student_id_number' => 'required|string|max:100|unique:students',
             'rfid_code' => 'nullable|string|max:100|unique:students',
             'parent_id' => 'nullable|integer|exists:users,id',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $validated['school_id'] = auth()->user()->school_id;
@@ -92,6 +93,13 @@ class StudentController extends Controller
                 ], 422);
             }
         }
+
+        $profileImagePath = null;
+        if ($request->hasFile('profile_image')) {
+            $profileImagePath = $request->file('profile_image')->store('profiles', 'public');
+        }
+
+        $validated['profile_image'] = $profileImagePath;
 
         $student = Student::create($validated);
 
@@ -139,7 +147,15 @@ class StudentController extends Controller
             'student_id_number' => ['sometimes', 'required', 'string', 'max:100', Rule::unique('students')->ignore($student->id)],
             'rfid_code' => ['nullable', 'string', 'max:100', Rule::unique('students')->ignore($student->id)],
             'parent_id' => 'nullable|integer|exists:users,id',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
+
+        if ($request->hasFile('profile_image')) {
+            if ($student->profile_image) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($student->profile_image);
+            }
+            $validated['profile_image'] = $request->file('profile_image')->store('profiles', 'public');
+        }
 
         $student->update($validated);
 

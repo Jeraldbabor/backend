@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\ProcessAttendanceScan;
 use App\Models\AttendanceLog;
 use App\Models\Student;
+use App\Models\Teacher;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -51,6 +52,15 @@ class KioskController extends Controller
             ], 404);
         }
 
+        // --- 1.5 Find Adviser ---
+        $adviser = Teacher::where('school_id', $student->school_id)
+            ->where('grade', $student->grade)
+            ->where('section', $student->section)
+            ->with('user')
+            ->first();
+            
+        $adviserName = $adviser && $adviser->user ? $adviser->user->name : 'No Adviser Assigned';
+
         // --- 2. Throttle: prevent duplicate scans within 5 minutes ---
         $recentScan = AttendanceLog::where('student_id', $student->id)
             ->where('scanned_at', '>=', Carbon::now()->subMinutes(5))
@@ -65,6 +75,8 @@ class KioskController extends Controller
                     'name' => $student->full_name,
                     'grade' => $student->grade,
                     'section' => $student->section,
+                    'profile_image_url' => $student->profile_image_url,
+                    'adviser_name' => $adviserName,
                 ],
                 'last_scan' => $recentScan->scanned_at->toISOString(),
             ], 429);
@@ -111,6 +123,8 @@ class KioskController extends Controller
                 'name' => $student->full_name,
                 'grade' => $student->grade,
                 'section' => $student->section,
+                'profile_image_url' => $student->profile_image_url,
+                'adviser_name' => $adviserName,
             ],
             'scan' => [
                 'direction' => $direction,

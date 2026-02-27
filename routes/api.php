@@ -101,6 +101,7 @@ Route::prefix('mobile')->group(function () {
         Route::get('/me', [\App\Http\Controllers\MobileAuthController::class, 'me']);
         Route::get('/dashboard', [\App\Http\Controllers\MobileAuthController::class, 'dashboard']);
         Route::post('/push-token', [\App\Http\Controllers\MobileAuthController::class, 'storePushToken']);
+        Route::post('/profile-image', [\App\Http\Controllers\MobileAuthController::class, 'updateProfileImage']);
 
         // Notifications (reuse existing controller)
         Route::get('/notifications', [NotificationController::class, 'index']);

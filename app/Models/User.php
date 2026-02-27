@@ -30,6 +30,7 @@ class User extends Authenticatable
         'password',
         'role', // Added: user role (superadmin, admin, parent, student)
         'school_id',
+        'profile_image',
     ];
 
     /**
@@ -40,6 +41,15 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'profile_image_url',
     ];
 
     /**
@@ -93,6 +103,17 @@ class User extends Authenticatable
     public function isParent(): bool
     {
         return $this->role === 'parent';
+    }
+
+    /**
+     * Get the full URL to the user's profile image.
+     */
+    public function getProfileImageUrlAttribute(): ?string
+    {
+        if ($this->profile_image) {
+            return url(\Illuminate\Support\Facades\Storage::url($this->profile_image));
+        }
+        return null;
     }
 
     /**
