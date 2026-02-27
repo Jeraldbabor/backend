@@ -200,4 +200,45 @@ class MobileAuthController extends Controller
 
         return response()->json(['message' => 'Push token registered successfully.']);
     }
+
+    /**
+     * Update Profile Image
+     *
+     * POST /api/mobile/profile-image
+     * Body (FormData): { profile_image }
+     */
+    public function updateProfileImage(Request $request)
+    {
+        \Illuminate\Support\Facades\Log::info('Mobile Profile Image Upload Request', [
+            'has_file' => $request->hasFile('profile_image'),
+            'all' => $request->all(),
+            'files' => $request->file(),
+        ]);
+
+        try {
+            $request->validate([
+                'profile_image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error('Validation Failed', $e->errors());
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $e->errors()
+            ], 422);
+        }
+
+        $user = $request->user();
+
+        if ($user->profile_image) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profile_image);
+        }
+
+        $user->profile_image = $request->file('profile_image')->store('profiles', 'public');
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profile image updated successfully.',
+            'user' => $user->load('school'),
+        ]);
+    }
 }

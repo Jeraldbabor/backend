@@ -23,6 +23,16 @@ class Student extends Model
         'section',
         'rfid_code',
         'student_id_number',
+        'profile_image',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'profile_image_url',
     ];
 
     /**
@@ -31,6 +41,17 @@ class Student extends Model
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    /**
+     * Get the full URL to the student's profile image.
+     */
+    public function getProfileImageUrlAttribute(): ?string
+    {
+        if ($this->profile_image) {
+            return url(\Illuminate\Support\Facades\Storage::url($this->profile_image));
+        }
+        return null;
     }
 
     /**
